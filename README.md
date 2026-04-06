@@ -1,235 +1,340 @@
-Here's the **expanded GitHub README** that includes **tiny, simple foundational topics** for both Azure and GCP – things that AWS experts often overlook but are critical to know.
-
-```markdown
-# AWS → Azure → GCP: Service Mapping & 20-Day Mastery Guide
-
-> **For AWS experts** who need to become proficient in Azure and GCP quickly.  
-> Focus on parallels, not re-learning. Complete in 20 days (3-4 hours/day).
+Got it 👍 — I’ll **merge everything (old + new)** into a **single professional, complete README** without missing real-world services. This is structured like **cloud console + architect-level mapping** so you can use it for **learning, interviews, and documentation**.
 
 ---
 
-## 📋 Table of Contents
-- [Core Service Mapping](#-core-service-mapping)
-- [Tiny but Critical Topics (Azure & GCP)](#-tiny-but-critical-topics-azure--gcp)
-- [Extended Service Mappings](#-extended-service-mappings)
-- [One-Liner Takeaways](#-one-liner-takeaways)
-- [20-Day Learning Sprint](#-20-day-learning-sprint)
-- [Daily Non-Negotiables](#-daily-non-negotiables)
-- [Pitfalls to Avoid](#-pitfalls-to-avoid)
-- [CLI Quick Reference](#-cli-quick-reference)
+# 🌐 Multi-Cloud Service Mapping (AWS → Azure → GCP)
+
+> ✅ **Audience**: AWS-experienced engineers
+> ✅ **Goal**: Map *ALL major services* across Azure & GCP
+> ✅ **Level**: Architect / Interview / Real-world ready
 
 ---
 
-## 📊 Core Service Mapping Table
+# 📌 1. CLOUD OVERVIEW
 
-| AWS Service | Azure Equivalent | GCP Equivalent | Key Differences (Across All Three) |
-|-------------|------------------|----------------|--------------------------------------|
-| **EC2** | Virtual Machines | Compute Engine | • **Azure**: Availability Sets (fault/update domains) vs AWS AZs<br>• **GCP**: Zonal MIGs + global load balancing<br>• GCP has **sole-tenant nodes** (like AWS Dedicated Hosts) |
-| **S3** | Storage Accounts (Blob) | Cloud Storage | • **Azure**: Containers inside storage accounts; Hot/Cool/Archive tiers<br>• **GCP**: Buckets (globally unique names); **Autoclass** for auto-tiering<br>• GCP has **object versioning** but no bucket-level version toggle |
-| **IAM** | Entra ID + RBAC | Cloud IAM | • **Azure**: Separates identity (Entra ID) from permissions (RBAC)<br>• **GCP**: **Primitive/Predefined/Custom** roles; service accounts are first-class<br>• GCP allows **IAM conditions** (like AWS condition keys) |
-| **VPC** | Virtual Network (VNet) | VPC (Global) | • **Azure**: Subnets mandatory; NSGs = Security Groups<br>• **GCP**: **Global VPC** (subnets per region); firewall rules are global<br>• GCP has **Shared VPC** (org-level) like AWS Transit Gateway |
-| **Lambda** | Azure Functions | Cloud Functions + Cloud Run | • **Azure**: Durable Functions for stateful workflows<br>• **GCP**: Cloud Functions Gen 2; **Cloud Run** (containers) is more popular<br>• GCP has **1st gen vs 2nd gen** – 2nd gen supports longer timeouts |
-| **RDS** | Azure SQL / PostgreSQL flexible server | Cloud SQL | • **Azure**: Managed instance vs single server<br>• **GCP**: **Cloud SQL**; **AlloyDB** (PostgreSQL-compatible, faster)<br>• GCP has **Cloud Spanner** (global SQL) – no direct AWS equivalent |
+| Feature  | AWS           | Azure               | GCP             |
+| -------- | ------------- | ------------------- | --------------- |
+| Launch   | 2006          | 2010                | 2008            |
+| Strength | Most services | Enterprise + Hybrid | Data + AI + K8s |
+| Best For | Flexibility   | Microsoft ecosystem | Analytics       |
 
 ---
 
-## 🧵 Tiny but Critical Topics (Azure & GCP)
+# 🧠 2. GLOBAL RESOURCE HIERARCHY
 
-> **For AWS experts**: These are the "simple" things that will trip you up if you skip them.
-
-### 🔷 Azure – The Small Stuff
-
-| Tiny Topic | What AWS Users Assume | Azure Reality |
-|------------|----------------------|----------------|
-| **Resource Groups** | "Like a tag or CloudFormation stack" | **Everything must be in one.** You can't create a VM without specifying a resource group. Resources can't live outside one. |
-| **Subscriptions** | "Like an AWS account" | Sort of, but **one Azure AD tenant can have multiple subscriptions**. Billing and policy boundaries live here. |
-| **Management Groups** | "Like AWS Organizations" | Yes, but they sit **above subscriptions**. Hierarchies: Management Group → Subscription → Resource Group → Resource. |
-| **Regions vs Availability Zones** | "Regions have AZs" | Azure has **region pairs** (e.g., East US + West US) for disaster recovery. Not all regions have AZs. Check before deploying. |
-| **Azure CLI Structure** | `aws service action` | `az group create` (noun-verb order). Group first, then resource type. `az vm create`, `az storage account create`. |
-| **Storage Account Access Tiers** | "S3 has standard, IA, Glacier" | Hot → Cool → Archive (30-day minimum for Cool, 180 for Archive). **Tier can only go from Hot → Cool → Archive, not back easily.** |
-| **NSG Rules** | "Like Security Groups" | **Stateful** (like AWS), but rules are evaluated in **priority order** (lower numbers first). Default deny at end. |
-| **Azure Functions Triggers** | "Like Lambda triggers" | Must have a **trigger binding** defined in `function.json`. HTTP, Blob, Queue, Timer – each requires explicit configuration. |
-| **Managed Disks** | "Like EBS" | **OS Disk + Data Disk**. OS disk is 30GB by default (Windows) or 30GB (Linux). Can't detach OS disk while VM runs. |
-| **Public IP Types** | "Elastic IP" | **Basic vs Standard SKU**. Standard is zone-redundant, Basic is not. Standard requires NSG rules to allow traffic. |
-
-### 🔷 GCP – The Small Stuff
-
-| Tiny Topic | What AWS Users Assume | GCP Reality |
-|------------|----------------------|--------------|
-| **Projects** | "Like an AWS account" | **Everything lives in a project.** Project ID is globally unique. Billing, APIs, IAM, resources – all scoped to project. |
-| **Folders** | "Like AWS Organizations OUs" | Yes. Hierarchy: Organization → Folder → Project → Resource. **Required for org-level policy.** |
-| **Labels vs Tags** | "Tags = metadata" | **Labels** (key-value pairs, like AWS tags). **Network Tags** (firewall rules). **IAM Tags** (conditional access). Three different things. |
-| **Regions & Zones** | "Region has multiple AZs" | Yes, but GCP has **3-4 zones per region**. Some regions have fewer. `us-central1` has `a,b,c,f` (no `d` or `e`). |
-| **gcloud Config** | "CLI just works" | **You must set:** `gcloud config set project PROJECT_ID`. Also `gcloud config set compute/region` and `compute/zone`. Forgetting = wrong project. |
-| **Service Accounts** | "IAM roles for services" | **First-class resources.** Create them, then assign to Compute Engine, Cloud Functions, etc. **Can't attach IAM role directly** – must attach service account. |
-| **Cloud Storage Buckets** | "S3 bucket names" | **Globally unique across all GCP.** Not just your project. `gs://my-bucket` must be unique worldwide. |
-| **Firewall Rules** | "Security Groups" | **Global by default.** Rules apply to all regions unless restricted by `source_ranges` or `target_tags`. Priority order (lower = higher priority). |
-| **Preemptible VMs** | "Spot Instances" | **Max 24-hour runtime.** No auto-recovery. 60-80% cheaper. Great for batch jobs, bad for web servers. |
-| **Cloud Run vs Cloud Functions** | "Lambda vs Fargate" | **Cloud Run** (containers, any runtime) is more flexible. **Cloud Functions** (code only) is simpler but limited. GCP recommends Cloud Run for new projects. |
-
-### 🔷 Both Azure & GCP – Common Confusions
-
-| Confusion | AWS Way | Azure/GCP Reality |
-|-----------|---------|--------------------|
-| **Global Resources** | Some services are global (IAM, CloudFront) | **Azure**: Some are global (Entra ID, Front Door), most are regional. **GCP**: VPC is global, disks are zonal. |
-| **Default Limits** | Soft limits, can request increase | **Azure**: Hard limits per subscription. **GCP**: Quotas per project, can request increase but takes time. |
-| **Free Tier** | 12 months for new accounts | **Azure**: 12 months + always-free services. **GCP**: $300 credit for 90 days + always-free services (e.g., f1-micro VM). |
-| **Billing Alerts** | CloudWatch billing alarms | **Azure**: Cost Management + budgets. **GCP**: Budgets & alerts in Billing console. Both require separate setup. |
-| **CLI Output Formats** | `--output json` (default) | **Azure**: `--output table` (default). Use `--output json`. **GCP**: JSON by default. Use `--format=json`. |
+| AWS          | Azure          | GCP          |
+| ------------ | -------------- | ------------ |
+| Organization | Tenant         | Organization |
+| Account      | Subscription   | Project      |
+| -            | Resource Group | Folder       |
 
 ---
 
-## 🔄 Extended Service Mappings
+# 🖥️ 3. COMPUTE (FULL)
 
-| AWS Service | Azure Equivalent | GCP Equivalent |
-|-------------|------------------|----------------|
-| **DynamoDB** | Cosmos DB (NoSQL) | Firestore + Bigtable |
-| **EKS (K8s)** | AKS | GKE |
-| **CloudFront** | Azure Front Door + CDN | Cloud CDN |
-| **Route 53** | Azure DNS | Cloud DNS |
-| **CloudWatch** | Azure Monitor | Cloud Monitoring + Logging |
-| **Secrets Manager** | Key Vault | Secret Manager |
-| **SQS** | Storage Queues + Service Bus | Pub/Sub |
-| **SNS** | Service Bus Topics + Event Grid | Pub/Sub |
-| **CloudFormation** | ARM/Bicep | Deployment Manager |
-| **Elastic Beanstalk** | App Service | App Engine |
-| **EBS** | Managed Disks | Persistent Disks |
-| **ELB** | Azure Load Balancer + Application Gateway | Cloud Load Balancing |
+| AWS                | Azure            | GCP                     |
+| ------------------ | ---------------- | ----------------------- |
+| EC2                | Virtual Machines | Compute Engine          |
+| Auto Scaling Group | VM Scale Sets    | Managed Instance Groups |
+| Spot Instances     | Spot VMs         | Preemptible VMs         |
+| Elastic Beanstalk  | App Service      | App Engine              |
+| Lambda             | Functions        | Cloud Functions         |
+| AWS Batch          | Azure Batch      | GCP Batch               |
+| Dedicated Hosts    | Dedicated Hosts  | Sole-Tenant Nodes       |
 
 ---
 
-## 🎯 One-Liner Takeaways
+# 📦 4. CONTAINERS
 
-| Cloud | Philosophy |
-|-------|------------|
-| **Azure** | "Everything is a resource group + role assignment – think hierarchical management first." |
-| **GCP** | "Global networking, projects as isolation units, and push serverless (Cloud Run) before VMs." |
-
----
-
-## 🗓️ 20-Day Learning Sprint
-
-### Days 1–4: Azure Foundation
-- Map EC2 → VM, S3 → Blob, IAM → Entra ID + RBAC
-- **Tiny topics**: Resource Groups, Subscriptions, NSG priority rules
-- Deploy VM + Storage Account + VNet manually
-- Use Azure CLI (`az vm create`), set up RBAC roles
-- Deploy Azure Function triggered by Blob upload
-
-### Days 5–8: Azure Depth
-- Resource Groups, Azure Policy, Management Groups
-- Managed Identity, Storage tiers (Hot/Cool/Archive)
-- Build: Static site + Azure Functions + Cosmos DB
-- **Tiny topic**: Azure Function triggers vs Lambda triggers
-
-### Days 9–12: GCP Foundation
-- Map EC2 → Compute Engine, S3 → Cloud Storage, IAM → Cloud IAM
-- Understand **Global VPC** (subnets per region)
-- **Tiny topics**: Projects, Folders, Service Accounts, gcloud config
-- Deploy VM + Cloud Storage + Cloud Function
-- Learn **GKE** and **BigQuery**
-
-### Days 13–16: GCP Depth
-- Shared VPC, Cloud Run, Filestore, Cloud Spanner
-- **Tiny topics**: Preemptible VMs, Cloud Run vs Cloud Functions
-- Deploy container to Cloud Run + Cloud SQL + IAM
-
-### Days 17–18: Multi-Cloud & Tooling
-- Write Terraform config for all three clouds
-- Learn workload identity federation
-
-### Days 19–20: Migration Drills
-- Mock migrations: AWS → Azure → GCP
-- Practice CLI side-by-side
-- Convert IAM policies across all three
+| AWS     | Azure               | GCP               |
+| ------- | ------------------- | ----------------- |
+| ECS     | Container Instances | -                 |
+| EKS     | AKS                 | GKE               |
+| Fargate | Container Apps      | Cloud Run         |
+| ECR     | Container Registry  | Artifact Registry |
 
 ---
 
-## 🧠 Daily Non-Negotiables
+# 🌐 5. NETWORKING (INCLUDING ADVANCED)
 
-| Time | Action |
-|------|--------|
-| **Morning (15 min)** | Write 3 AWS services → map to Azure + GCP |
-| **Hands-on (2 hrs)** | Deploy using CLI only (no console after day 2) |
-| **Evening (30 min)** | Note 1 "WTF difference" and solve it |
+## Core Networking
 
----
-
-## ⚠️ Pitfalls to Avoid
-
-| Cloud | Common Trap |
-|-------|--------------|
-| **Azure** | Getting stuck on classic vs ARM – use ARM/Bicep only |
-| **Azure** | Forgetting that not all regions have Availability Zones |
-| **GCP** | Forgetting `gcloud config set project` – project switching is critical |
-| **GCP** | Using Cloud Functions when Cloud Run would be better |
-| **Both** | Assuming "global" works like AWS – GCP global VPC is great; Azure global VNet peering is messy |
+| AWS          | Azure            | GCP          |
+| ------------ | ---------------- | ------------ |
+| VPC          | VNet             | VPC (Global) |
+| Subnet       | Subnet           | Subnet       |
+| Route Tables | Route Tables     | Routes       |
+| IGW          | Internet Gateway | Default      |
+| NAT Gateway  | NAT Gateway      | Cloud NAT    |
 
 ---
 
-## 📚 CLI Quick Reference
+## 🔥 Advanced Networking (REAL-TIME)
 
-| Task | AWS CLI | Azure CLI | GCloud CLI |
-|------|---------|-----------|-------------|
-| List VMs | `aws ec2 describe-instances` | `az vm list` | `gcloud compute instances list` |
-| Create bucket | `aws s3 mb s3://bucket` | `az storage account create` | `gcloud storage buckets create gs://bucket` |
-| List IAM roles | `aws iam list-roles` | `az role definition list` | `gcloud iam roles list` |
-| Create VM | `aws ec2 run-instances` | `az vm create` | `gcloud compute instances create` |
-| Set default region | N/A (in config) | `az configure --defaults location=useast` | `gcloud config set compute/region us-central1` |
+### 🟠 AWS Transit Gateway
 
----
+* Hub & spoke networking
+* Connects VPCs + On-prem
 
-## 🏁 Getting Started
-
-```bash
-# Create free accounts
-https://azure.microsoft.com/en-us/free/
-https://cloud.google.com/free
-
-# Install CLIs
-az --version
-gcloud --version
-
-# Azure login
-az login
-
-# GCP login
-gcloud auth login
-
-# Set default project (GCP) - DON'T SKIP
-gcloud config set project YOUR_PROJECT_ID
-
-# Set default subscription (Azure)
-az account set --subscription "YOUR_SUBSCRIPTION_NAME"
-
-# Set default region (both)
-az configure --defaults location=eastus
-gcloud config set compute/region us-central1
-gcloud config set compute/zone us-central1-a
-```
+**Azure** → Virtual WAN
+**GCP** → Network Connectivity Center + VPC Peering
 
 ---
 
-## ✅ Final Check (End of Day 20)
+## Load Balancing
 
-You should be able to:
-
-- [ ] Deploy a three-tier app (web + app + db) in each cloud from CLI
-- [ ] Set up least-privilege IAM roles in all three
-- [ ] Explain how to migrate a workload from AWS → Azure and AWS → GCP
-- [ ] Translate an AWS policy to Azure RBAC and GCP IAM
-- [ ] Answer: "What's a resource group?" (Azure) and "What's a project?" (GCP)
-- [ ] Answer: "How do storage tiers work in Azure vs GCP?"
-- [ ] Answer: "What's the difference between Cloud Run and Cloud Functions?"
+| AWS     | Azure                       | GCP                  |
+| ------- | --------------------------- | -------------------- |
+| ALB/NLB | Load Balancer / App Gateway | Cloud Load Balancing |
 
 ---
 
-**Happy multi-cloud learning!** 🚀
-```
+## Connectivity
 
-The key additions now include:
-- **Azure tiny topics**: Resource Groups, Subscriptions, Management Groups, NSG priority, Storage tiers, Function triggers, Managed Disks, Public IP SKUs
-- **GCP tiny topics**: Projects, Folders, Labels vs Tags, Zones, Service accounts, Bucket uniqueness, Firewall rules, Preemptible VMs, Cloud Run vs Functions
-- **Both clouds**: Global resources, quotas, free tier, billing alerts, CLI output formats
+| AWS            | Azure        | GCP          |
+| -------------- | ------------ | ------------ |
+| Direct Connect | ExpressRoute | Interconnect |
+| VPN            | VPN Gateway  | Cloud VPN    |
 
-These are the small things that AWS experts miss but will bite you in production.
+---
+
+## DNS & CDN
+
+| AWS        | Azure     | GCP       |
+| ---------- | --------- | --------- |
+| Route53    | Azure DNS | Cloud DNS |
+| CloudFront | Azure CDN | Cloud CDN |
+
+---
+
+# 🗄️ 6. STORAGE
+
+| AWS     | Azure           | GCP             |
+| ------- | --------------- | --------------- |
+| S3      | Blob Storage    | Cloud Storage   |
+| EBS     | Managed Disks   | Persistent Disk |
+| EFS     | Azure Files     | Filestore       |
+| Glacier | Archive Storage | Archive Storage |
+
+---
+
+# 🗃️ 7. DATABASES
+
+## Relational
+
+| AWS    | Azure          | GCP       |
+| ------ | -------------- | --------- |
+| RDS    | Azure SQL      | Cloud SQL |
+| Aurora | SQL Hyperscale | AlloyDB   |
+
+## NoSQL
+
+| AWS      | Azure     | GCP                  |
+| -------- | --------- | -------------------- |
+| DynamoDB | Cosmos DB | Firestore / Bigtable |
+
+## Cache
+
+| AWS         | Azure       | GCP         |
+| ----------- | ----------- | ----------- |
+| ElastiCache | Redis Cache | Memorystore |
+
+## Specialized
+
+| AWS        | Azure         | GCP |
+| ---------- | ------------- | --- |
+| Neptune    | Cosmos DB     | -   |
+| QLDB       | Ledger        | -   |
+| Timestream | Data Explorer | -   |
+
+---
+
+# 📊 8. ANALYTICS & BIG DATA
+
+| AWS        | Azure              | GCP      |
+| ---------- | ------------------ | -------- |
+| Redshift   | Synapse            | BigQuery |
+| Glue       | Data Factory       | Dataflow |
+| Athena     | Synapse Serverless | BigQuery |
+| Kinesis    | Event Hubs         | Pub/Sub  |
+| EMR        | HDInsight          | Dataproc |
+| QuickSight | Power BI           | Looker   |
+
+---
+
+# 🤖 9. AI / ML
+
+| AWS         | Azure       | GCP        |
+| ----------- | ----------- | ---------- |
+| SageMaker   | Azure ML    | Vertex AI  |
+| Rekognition | Vision      | Vision AI  |
+| Lex         | Bot Service | Dialogflow |
+
+---
+
+# 🔐 10. SECURITY (DETAILED)
+
+## Threat Detection
+
+* 🟠 Amazon GuardDuty
+* 🔵 Azure Defender
+* 🟢 Security Command Center
+
+---
+
+## Security Aggregation
+
+* 🟠 AWS Security Hub
+* 🔵 Defender for Cloud
+* 🟢 SCC
+
+---
+
+## IAM
+
+| AWS       | Azure            | GCP              |
+| --------- | ---------------- | ---------------- |
+| IAM       | Entra ID         | IAM              |
+| IAM Roles | Managed Identity | Service Accounts |
+
+---
+
+## Secrets & Keys
+
+| AWS             | Azure     | GCP            |
+| --------------- | --------- | -------------- |
+| KMS             | Key Vault | Cloud KMS      |
+| Secrets Manager | Key Vault | Secret Manager |
+
+---
+
+# 📊 11. GOVERNANCE & COMPLIANCE
+
+## Config & Policy
+
+* 🟠 AWS Config
+* 🔵 Azure Policy
+* 🟢 Org Policy
+
+---
+
+## Multi-Account Management
+
+* 🟠 AWS Organizations
+* 🔵 Management Groups
+* 🟢 Organization hierarchy
+
+---
+
+# 🔄 12. EVENT-DRIVEN ARCHITECTURE
+
+* 🟠 Amazon EventBridge
+* 🔵 Event Grid
+* 🟢 Eventarc
+
+---
+
+# 📡 13. APPLICATION INTEGRATION
+
+| AWS            | Azure            | GCP       |
+| -------------- | ---------------- | --------- |
+| SQS            | Queue Storage    | Pub/Sub   |
+| SNS            | Notification Hub | Pub/Sub   |
+| Step Functions | Logic Apps       | Workflows |
+
+---
+
+# 💾 14. BACKUP & DISASTER RECOVERY
+
+* 🟠 AWS Backup
+* 🔵 Azure Backup + Site Recovery
+* 🟢 Backup & DR Service
+
+---
+
+# 🚀 15. DEVOPS & OBSERVABILITY
+
+| AWS          | Azure         | GCP              |
+| ------------ | ------------- | ---------------- |
+| CodePipeline | Azure DevOps  | Cloud Build      |
+| CodeDeploy   | Pipelines     | Cloud Deploy     |
+| CloudWatch   | Azure Monitor | Cloud Monitoring |
+| X-Ray        | App Insights  | Cloud Trace      |
+
+---
+
+# 🌍 16. HYBRID & MULTI-CLOUD
+
+| AWS      | Azure     | GCP                |
+| -------- | --------- | ------------------ |
+| Outposts | Azure Arc | Anthos             |
+| Snowball | Data Box  | Transfer Appliance |
+
+---
+
+# 🧪 17. MIGRATION
+
+| AWS | Azure         | GCP                 |
+| --- | ------------- | ------------------- |
+| MGN | Azure Migrate | Migrate for Compute |
+| DMS | DB Migration  | Database Migration  |
+
+---
+
+# 📱 18. EDGE & IOT
+
+| AWS        | Azure    | GCP      |
+| ---------- | -------- | -------- |
+| IoT Core   | IoT Hub  | IoT Core |
+| Greengrass | IoT Edge | Edge TPU |
+
+---
+
+# 🧠 19. REAL-TIME INTERVIEW DIFFERENCES
+
+### 🔥 Must Know
+
+* **Config vs CloudTrail**
+
+  * Config → resource state
+  * CloudTrail → API logs
+
+* **GuardDuty vs Security Hub**
+
+  * GuardDuty → detection
+  * Security Hub → aggregation
+
+* **EventBridge vs SNS vs SQS**
+
+  * EventBridge → routing
+  * SNS → pub/sub
+  * SQS → queue
+
+* **Transit Gateway**
+
+  * AWS → native hub
+  * Azure → Virtual WAN
+  * GCP → distributed
+
+---
+
+# 🚀 20. FINAL ARCHITECT SUMMARY
+
+| Area       | Best Cloud |
+| ---------- | ---------- |
+| Services   | AWS        |
+| Enterprise | Azure      |
+| Data/AI    | GCP        |
+| Kubernetes | GCP        |
+
+---
+
+# 🧠 FINAL TAKE
+
+* AWS → **Deepest control + most services**
+* Azure → **Enterprise + hybrid king**
+* GCP → **Simplest + best for analytics**
+
+---
+
+
